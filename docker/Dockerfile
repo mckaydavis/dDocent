@@ -21,6 +21,7 @@ run apt-get install -y libpython-dev
 run apt-get install -y wget
 run apt-get install -y cmake
 run apt-get install -y unzip
+run apt-get install -y bc
 
 
 env DDOCENT_DIR /usr/local/ddocent
@@ -218,17 +219,22 @@ run true \
     && make install \
     && true
 
-
+# seqtk download
 run true \
     && git clone https://github.com/lh3/seqtk.git ${DDOCENT_BUILD_DIR}/seqtk \
     && true
 
-
+# seqtk build
 run true \
     && cd ${DDOCENT_BUILD_DIR}/seqtk \
     && make -j4 \
     && true
 
+# seqtk install
+run true \
+    && mkdir -p ${DDOCENT_INSTALL_DIR}/seqtk/bin \
+    && cp ${DDOCENT_BUILD_DIR}/seqtk/seqtk ${DDOCENT_INSTALL_DIR}/seqtk/bin \
+    && true
 
 
 run true \
