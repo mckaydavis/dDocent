@@ -289,6 +289,7 @@ env PATH ${DDOCENT_INSTALL_DIR}/freebayes/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/gnuplot/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/rainbow/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/samtools/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/seqtk/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/stacks/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/trim_galore/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/vcflib/bin:${PATH}
