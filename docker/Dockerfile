@@ -2,8 +2,9 @@
 #
 # derived from https://github.com/jpuritz/dDocent/blob/master/install_dDocent.FB_requirements
 # developed and tested with Docker version 0.9.1, build 3600720
-FROM ubuntu:14.04
-MAINTAINER https://github.com/McKayDavis
+
+from ubuntu:14.04
+maintainer https://github.com/McKayDavis
 
 run sed -i 's:archive.ubuntu.com/ubuntu/:mirror.ancl.hawaii.edu/linux/ubuntu/:' /etc/apt/sources.list
 run apt-get update
@@ -22,18 +23,23 @@ run apt-get install -y cmake
 run apt-get install -y unzip
 
 
-ENV DDOCENT_DIR /usr/local/ddocent
-ENV DDOCENT_BUILD_DIR ${DDOCENT_DIR}/build
-ENV DDOCENT_INSTALL_DIR ${DDOCENT_DIR}/install
+env DDOCENT_DIR /usr/local/ddocent
+env DDOCENT_BUILD_DIR ${DDOCENT_DIR}/build
+env DDOCENT_INSTALL_DIR ${DDOCENT_DIR}/install
+
+# note about the run true \ ... && true style:
+# This is done to simplfy moving and cut'n'paste of
+# the actual intermediate commands between invokations of run
+# Every acutal command line starts with a && and ends with a backslash
 
 run true \
     && mkdir -p ${DDOCENT_BUILD_DIR} \
-    true
+    && true
 
 # STACKS 1.12
 run true \
     && cd ${DDOCENT_BUILD_DIR} \
-    && curl -O http://creskolab.uoregon.edu/stacks/source/stacks-1.12.tar.gz  \
+    && curl -L -O http://creskolab.uoregon.edu/stacks/source/stacks-1.12.tar.gz  \
     && tar xvzf stacks-1.12.tar.gz \
     && cd stacks-1.12 \
     && ./configure --prefix=${DDOCENT_INSTALL_DIR}/stacks \
@@ -52,8 +58,16 @@ run true \
     && cd ${DDOCENT_BUILD_DIR}/freebayes \
     && true
 
+# FreeBayes performs a checkout and build of BamTools
+# Modify the Makefile to pass the install path to the CMake config of BamTools
+# Also modify the BamTools library generation to not build a Shared Object lib (.so)
+# and link the static libbamtools.a instead. This fixes an issue where the installed
+# bin/bamtools cannot find the .so
 run true \
-    && sed -i "s:cmake .. && \$(MAKE):cmake .. -DCMAKE_INSTALL_PREFIX=${DDOCENT_INSTALL_DIR}/bamtools \&\& \$\(MAKE\) install:g" ${DDOCENT_BUILD_DIR}/freebayes/src/Makefile
+    && sed -i "s:cmake .. && \$(MAKE):cmake .. -DCMAKE_INSTALL_PREFIX=${DDOCENT_INSTALL_DIR}/bamtools \&\& \$\(MAKE\) install:g" ${DDOCENT_BUILD_DIR}/freebayes/src/Makefile \
+    && sed -i "s:LIBRARY :ARCHIVE :g" ${DDOCENT_BUILD_DIR}/freebayes/bamtools/src/api/CMakeLists.txt \
+    && sed -i "s:SHARED :STATIC :g" ${DDOCENT_BUILD_DIR}/freebayes/bamtools/src/api/CMakeLists.txt \
+    && true
 
 run true \
     && make -j4 -C ${DDOCENT_BUILD_DIR}/freebayes \
@@ -84,7 +98,7 @@ run true \
 # CutAdapt 1.2.1
 run true \
     && cd ${DDOCENT_BUILD_DIR} \
-    && curl -O  http://cutadapt.googlecode.com/files/cutadapt-1.2.1.tar.gz \
+    && curl -L -O  http://cutadapt.googlecode.com/files/cutadapt-1.2.1.tar.gz \
     && true
 
 run true \
@@ -99,7 +113,7 @@ run true \
 # FastQC 0.10.1
 run true \
     && cd ${DDOCENT_BUILD_DIR} \
-    && curl -O http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.10.1.zip \
+    && curl -L -O http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.10.1.zip \
     && true
 
 run true \
@@ -113,7 +127,7 @@ run true \
 # Trim Galore 0.3.3
 run true \
     && cd ${DDOCENT_BUILD_DIR} \
-    && curl -O http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/trim_galore_v0.3.3.zip \
+    && curl -L -O http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/trim_galore_v0.3.3.zip \
     && true
 
 run true \
@@ -250,11 +264,25 @@ run true \
     && true
 
 run true \
-    && mkdir -p ${DDOCENT_INSTALL_DIR}/dDocent/bin \
-    && cd ${DDOCENT_INSTALL_DIR}/dDocent/bin \
-    && curl -O https://github.com/jpuritz/dDocent/raw/master/mergefq.pl \
-    && curl -O http://seq-filter.googlecode.com/files/Seq_filter.pl \
-    && curl -O http://nash-bioinformatics-codelets.googlecode.com/files/cutseq_fasta.pl \
-    && curl -O https://github.com/jpuritz/dDocent/raw/master/dDocent.FB \
+    && mkdir -p ${DDOCENT_INSTALL_DIR}/ddocent/bin \
+    && cd ${DDOCENT_INSTALL_DIR}/ddocent/bin \
+    && curl -L -O http://seq-filter.googlecode.com/files/Seq_filter.pl \
+    && curl -L -O http://nash-bioinformatics-codelets.googlecode.com/files/cutseq_fasta.pl \
+    && curl -L -O https://github.com/McKayDavis/dDocent/raw/master/mergefq.pl \
+    && curl -L -O https://github.com/McKayDavis/dDocent/raw/master/dDocent.FB \
     && chmod +x * \
     && true
+
+# Modify the container PATH to find all the dDocent scripts
+env PATH ${DDOCENT_INSTALL_DIR}/bamtools/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/bedtools/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/bwa/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/ddocent/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/fastqc/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/freebayes/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/gnuplot/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/rainbow/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/samtools/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/stacks/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/trim_galore/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/vcflib/bin:${PATH}
