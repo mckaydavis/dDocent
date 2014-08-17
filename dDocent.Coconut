@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -euo pipefail
+set -vx
+
 ##########dDocent 1.0##########
 
 
@@ -151,7 +154,7 @@ fi
 echo ""
 echo "Please enter your email address.  dDocent will email you when it is finished running."
 echo "Don't worry; dDocent has no financial need to sell your email address to spammers."
-read MAIL
+#read MAIL
 echo ""
 echo ""
 
@@ -174,7 +177,8 @@ fi
 
 
 #Wrapper for main program functions.  This allows the entire file to be read first before execution
-main(){
+main()
+{
 
     #Sets a start time variable
     STARTTIME=$(date)
@@ -330,9 +334,9 @@ main(){
     #Sending a completion email
 
     if [ $ERRORS -gt 0 ]; then
-        echo -e "dDocent has finished with errors in" `pwd` "\n\ndDocent started" $STARTTIME "\n\ndDocent finished" `date` "\n\nPlease check log files\n\n" `mawk '/After filtering, kept .* out of a possible/' ./logfiles/Final.log` "\n\ndDocent 0.5 \nThe 'd' is silent, hillbilly." | mailx -s "dDocent has finished with ERRORS!" $MAIL
+        echo -e "dDocent has finished with errors in" `pwd` "\n\ndDocent started" $STARTTIME "\n\ndDocent finished" `date` "\n\nPlease check log files\n\n" `mawk '/After filtering, kept .* out of a possible/' ./logfiles/Final.log` "\n\ndDocent 0.5 \nThe 'd' is silent, hillbilly." #| mailx -s "dDocent has finished with ERRORS!" $MAIL
     else
-        echo -e "dDocent has finished with an analysis in" `pwd` "\n\ndDocent started" $STARTTIME "\n\ndDocent finished" `date` "\n\n" `mawk '/After filtering, kept .* out of a possible/' ./logfiles/Final.log` "\n\ndDocent 0.5 \nThe 'd' is silent, hillbilly." | mailx -s "dDocent has finished" $MAIL
+        echo -e "dDocent has finished with an analysis in" `pwd` "\n\ndDocent started" $STARTTIME "\n\ndDocent finished" `date` "\n\n" `mawk '/After filtering, kept .* out of a possible/' ./logfiles/Final.log` "\n\ndDocent 0.5 \nThe 'd' is silent, hillbilly." #| mailx -s "dDocent has finished" $MAIL
     fi
 }
 
@@ -341,12 +345,15 @@ main(){
 
 #Function for trimming reads using trim_galore
 TrimReads ()
-{ for i in "${NAMES[@]}"
+{
+    SEQA=GATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATATCGTATGCCGTCTTCTGCTTG
+    SEQA2=GATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCG
+    for i in "${NAMES[@]}"
     do
-    echo "Trimming Sample $i"
-    trim_galore --paired -q 10 --length 20 -a GATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNATATCGTATGCCGTCTTCTGCTTG -a2 GATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCG --stringency 10 $i.F.fq $i.R.fq 2> $i.trim.log
-    mv $i.F_val_1.fq $i.R1.fq
-    mv $i.R_val_2.fq $i.R2.fq
+        echo "Trimming Sample $i"
+        trim_galore --paired -q 10 --length 20 -a $SEQA -a2 $SEQA1 --stringency 10 $i.F.fq $i.R.fq 2> $i.trim.log
+        mv $i.F_val_1.fq $i.R1.fq
+        mv $i.R_val_2.fq $i.R2.fq
     done
 }
 
@@ -528,6 +535,9 @@ CreateIntervals()
     cat *.R.fq > reverse1
     wait
 
+:<<'DISABLED'
+
+
     #Split reads into 4 smaller files to reduce memory usage
     NumSeqs=$(cat forward1 | wc -l)
     NumSeqs=$(( $NumSeqs / 4 ))
@@ -546,17 +556,18 @@ CreateIntervals()
     cat *.fq_2 > rw
 
     rm *.fq_1 *.fq_2
+DISABLED
 
-    clone_filter -1 fw -2 rw
+    clone_filter -1 forward1 -2 reverse1
 
-    mv fw.fil.fq_1 forward1
-    mv rw.fil.fq_2 reverse1
+    #mv fw.fil.fq_1 forward1
+    #mv rw.fil.fq_2 reverse1
 
     #Map reads to reference
-    bwa mem reference.fasta forward1 reverse1 -t $NUMProc -a -M -T 10 -A $optA -B $optB -O $optO -R "@RG\tID:cat\tSM:cat\tPL:Illumina" | samtools view -q1 -@ $NUMProc -SbT reference.fasta - > cat.bam 2>cat.bam.log
+    bwa mem reference.fasta forward1.fil.fq_1 reverse1.fil.fq_2 -t $NUMProc -a -M -T 10 -A $optA -B $optB -O $optO -R "@RG\tID:cat\tSM:cat\tPL:Illumina" | samtools view -q1 -@ $NUMProc -SbT reference.fasta - > cat.bam 2>cat.bam.log
 
-    rm forward1 fw*
-    rm reverse1 rw*
+    rm forward1.fil.fq_1 reverse1.fil.fq_2
+    #rm reverse1 rw*
 
     wait
 
