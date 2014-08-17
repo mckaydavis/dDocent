@@ -249,9 +249,9 @@ run true \
     && cd ${DDOCENT_BUILD_DIR} \
     && tar xvzf cd-hit-v4.6.1-2012-08-27.tgz \
     && cd cd-hit-v4.6.1-2012-08-27 \
-    && mkdir -p ${DDOCENT_BUILD_DIR}/cd-hit/bin \
+    && mkdir -p ${DDOCENT_INSTALL_DIR}/cd-hit/bin \
     && make -j4 openmp=yes \
-    && make PREFIX=${DDOCENT_BUILD_DIR}/cd-hit/bin install \
+    && make PREFIX=${DDOCENT_INSTALL_DIR}/cd-hit/bin install \
     && true
 
 run true \
@@ -285,6 +285,7 @@ run true \
 env PATH ${DDOCENT_INSTALL_DIR}/bamtools/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/bedtools/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/bwa/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/cd-hit/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/ddocent/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/fastqc/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/freebayes/bin:${PATH}
