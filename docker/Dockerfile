@@ -6,6 +6,8 @@
 from ubuntu:14.04
 maintainer https://github.com/McKayDavis
 
+run echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
 run sed -i 's:archive.ubuntu.com/ubuntu/:mirror.ancl.hawaii.edu/linux/ubuntu/:' /etc/apt/sources.list
 run apt-get update
 run apt-get install -y git
