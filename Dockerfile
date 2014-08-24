@@ -77,6 +77,10 @@ run true \
     && true
 
 run true \
+    && make -j4 -C ${DDOCENT_BUILD_DIR}/freebayes/vcflib \
+    && true
+
+run true \
     && mkdir -p ${DDOCENT_INSTALL_DIR}/freebayes/bin \
     && cp ${DDOCENT_BUILD_DIR}/freebayes/bin/* ${DDOCENT_INSTALL_DIR}/freebayes/bin \
     && true
@@ -266,7 +270,7 @@ run true \
     && make -j4 \
     && true
 
-run true \
+ run true \
     && mkdir -p ${DDOCENT_INSTALL_DIR}/bedtools \
     && cp -r ${DDOCENT_BUILD_DIR}/bedtools2-2.19.1/bin ${DDOCENT_INSTALL_DIR}/bedtools \
     && true
@@ -280,6 +284,25 @@ run true \
     && curl -L -O https://github.com/McKayDavis/dDocent/raw/master/dDocent.FB \
     && chmod +x * \
     && true
+
+
+run true \
+    && cd ${DDOCENT_BUILD_DIR} \
+    && curl -L -O http://sourceforge.net/projects/vcftools/files/vcftools_0.1.11.tar.gz \
+    && tar xvzf vcftools_0.1.11.tar.gz \
+    && true
+
+run true \
+    && cd ${DDOCENT_BUILD_DIR}/vcftools_0.1.11 \
+    && make -j4 PREFIX=${DDOCENT_INSTALL_DIR}/vcftools install \
+    && true
+
+
+add dDocent.Coconut ${DDOCENT_INSTALL_DIR}/ddocent/bin/dDocent.Coconut
+run chmod a+x ${DDOCENT_INSTALL_DIR}/ddocent/bin/dDocent.Coconut
+
+add run.sh /bin/run.sh
+run chmod a+x /bin/run.sh
 
 # Modify the container PATH to find all the dDocent scripts
 env PATH ${DDOCENT_INSTALL_DIR}/bamtools/bin:${PATH}
@@ -295,4 +318,7 @@ env PATH ${DDOCENT_INSTALL_DIR}/samtools/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/seqtk/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/stacks/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/trim_galore/bin:${PATH}
+env PATH ${DDOCENT_INSTALL_DIR}/vcftools/bin:${PATH}
 env PATH ${DDOCENT_INSTALL_DIR}/vcflib/bin:${PATH}
+
+entrypoint ["/bin/run.sh"]
