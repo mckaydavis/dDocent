@@ -329,14 +329,19 @@ main()
     if [ ! -d "logfiles" ]; then
         mkdir logfiles
     fi
-    mv *.txt *.log log ./logfiles 2> /dev/null
+    mv *.txt *.log ./logfiles
+
+    echo "DONE! ERRORS=${ERRORS}"
 
     #Sending a completion email
-
-    if [ $ERRORS -gt 0 ]; then
-        echo -e "dDocent has finished with errors in" `pwd` "\n\ndDocent started" $STARTTIME "\n\ndDocent finished" `date` "\n\nPlease check log files\n\n" `mawk '/After filtering, kept .* out of a possible/' ./logfiles/Final.log` "\n\ndDocent 0.5 \nThe 'd' is silent, hillbilly." #| mailx -s "dDocent has finished with ERRORS!" $MAIL
+    
+    if [[ $ERRORS > 0 ]]
+    then
+        echo -e "dDocent has finished with errors in" `pwd` "\n\ndDocent started" $STARTTIME "\n\ndDocent finished" `date` "\n\nPlease check log files\n\n" `mawk '/After filtering, kept .* out of a possible/' ./logfiles/Final.log` "\n\ndDocent 0.5 \nThe 'd' is silent, hillbilly."
+	#| mailx -s "dDocent has finished with ERRORS!" $MAIL
     else
-        echo -e "dDocent has finished with an analysis in" `pwd` "\n\ndDocent started" $STARTTIME "\n\ndDocent finished" `date` "\n\n" `mawk '/After filtering, kept .* out of a possible/' ./logfiles/Final.log` "\n\ndDocent 0.5 \nThe 'd' is silent, hillbilly." #| mailx -s "dDocent has finished" $MAIL
+        echo -e "dDocent has finished with an analysis in" `pwd` "\n\ndDocent started" $STARTTIME "\n\ndDocent finished" `date` "\n\n" `mawk '/After filtering, kept .* out of a possible/' ./logfiles/Final.log` "\n\ndDocent 0.5 \nThe 'd' is silent, hillbilly." 
+	#| mailx -s "dDocent has finished" $MAIL
     fi
 }
 
@@ -351,7 +356,7 @@ TrimReads ()
     for i in "${NAMES[@]}"
     do
         echo "Trimming Sample $i"
-        trim_galore --paired -q 10 --length 20 -a $SEQA -a2 $SEQA1 --stringency 10 $i.F.fq $i.R.fq 2> $i.trim.log
+        trim_galore --paired -q 10 --length 20 -a $SEQA -a2 $SEQA2 --stringency 10 $i.F.fq $i.R.fq 2> $i.trim.log
         mv $i.F_val_1.fq $i.R1.fq
         mv $i.R_val_2.fq $i.R2.fq
     done
